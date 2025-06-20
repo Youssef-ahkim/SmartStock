@@ -1,366 +1,361 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SmartStock - Suivi des Stocks Intelligent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1e88e5',
+            primaryDark: '#1565c0',
+            secondary: '#f4f6f8',
+            alert: '#d32f2f',
+            warning: '#ffa000',
+            success: '#43a047',
+            info: '#0288d1',
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    :root {
-      --primary: #1e88e5;
-      --primary-dark: #1565c0;
-      --secondary: #f4f6f8;
-      --alert: #d32f2f;
-      --warning: #ffa000;
-      --success: #43a047;
-      --info: #0288d1;
-      --card-bg: #ffffff;
-      --font: 'Segoe UI', system-ui, sans-serif;
-    }
-
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
     body {
-      margin: 0;
-      font-family: var(--font);
-      background: var(--secondary);
-      color: #333;
-      line-height: 1.6;
+      font-family: 'Inter', system-ui, sans-serif;
     }
-
-    header {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: #fff;
-      padding: 20px;
-      text-align: center;
-      font-size: 24px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 0 15px;
-    }
-
-    .dashboard, .sensors {
+    
+    .dashboard-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      padding: 20px 0;
+      gap: 1.5rem;
     }
-
-    .card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      padding: 20px;
-      transition: transform 0.2s, box-shadow 0.2s;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 16px rgba(0,0,0,0.12);
-    }
-
-    .card h3 {
-      margin-top: 0;
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .card h3 .status {
+    
+    .status-dot {
       width: 12px;
       height: 12px;
       border-radius: 50%;
       display: inline-block;
       margin-left: auto;
     }
-
-    .status-normal {
-      background: var(--success);
+    
+    .card-hover {
+      transition: all 0.3s ease;
     }
-
-    .status-warning {
-      background: var(--warning);
+    
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
-
-    .status-alert {
-      background: var(--alert);
-    }
-
-    .data {
-      font-size: 15px;
-      margin: 10px 0;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .data-value {
-      font-weight: 600;
-    }
-
-    .alert {
-      color: var(--alert);
-      font-weight: bold;
-      margin-top: 12px;
-      padding: 8px 12px;
-      background: rgba(211, 47, 47, 0.1);
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .warning {
-      color: var(--warning);
-      background: rgba(255, 160, 0, 0.1);
-    }
-
-    .success {
-      color: var(--success);
-      background: rgba(67, 160, 71, 0.1);
-    }
-
-    .section-title {
-      padding: 15px 0 5px;
-      font-size: 18px;
-      font-weight: 600;
-      margin-top: 15px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--primary-dark);
-    }
-
+    
     .chart-container {
-      background: var(--card-bg);
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      padding: 20px;
-      margin: 20px 0 30px;
+      height: 300px;
     }
-
-    .solutions {
-      margin: 30px 0;
-    }
-
-    .solution-card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-
-    .solution-card h3 {
-      margin-top: 0;
-      color: var(--primary-dark);
+    
+    .alert-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
-      gap: 8px;
-    }
-
-    .solution-card .actions {
-      margin-top: 15px;
-      display: flex;
-      gap: 10px;
-    }
-
-    .btn {
-      padding: 8px 16px;
-      border-radius: 6px;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-dark);
-    }
-
-    .btn-secondary {
-      background: var(--secondary);
-      color: var(--primary);
-      border: 1px solid var(--primary);
-    }
-
-    .btn-secondary:hover {
-      background: rgba(30, 136, 229, 0.1);
-    }
-
-    footer {
-      text-align: center;
-      font-size: 13px;
-      color: #777;
-      padding: 20px;
-      margin-top: 30px;
-      border-top: 1px solid #eee;
-    }
-
-    @media (max-width: 768px) {
-      .dashboard, .sensors {
-        grid-template-columns: 1fr;
-      }
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
     }
   </style>
 </head>
-<body>
-
-  <header>📦 SmartStock - Plateforme de Suivi Intelligent des Stocks</header>
-
-  <div class="container">
-    <div class="section-title">📊 Tableau de Bord Global</div>
-    <section class="dashboard">
-      <div class="card">
-        <h3>📦 Stock Moyen <span class="status" id="avgStockStatus"></span></h3>
-        <p class="data">
-          <span>Valeur:</span>
-          <span class="data-value" id="avgStock">--</span> %
-        </p>
-        <p class="data">
-          <span>Min:</span>
-          <span class="data-value" id="minStock">--</span> %
-        </p>
-        <p class="data">
-          <span>Max:</span>
-          <span class="data-value" id="maxStock">--</span> %
-        </p>
+<body class="bg-gray-50 text-gray-800">
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-primary to-primaryDark text-white py-5 px-4 shadow-lg">
+    <div class="container mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <i class="fas fa-boxes text-3xl"></i>
+        <div>
+          <h1 class="text-2xl font-bold">SmartStock</h1>
+          <p class="text-sm opacity-80">Plateforme de Suivi Intelligent des Stocks</p>
+        </div>
       </div>
-      <div class="card">
-        <h3>🌡️ Température Moyenne <span class="status" id="avgTempStatus"></span></h3>
-        <p class="data">
-          <span>Valeur:</span>
-          <span class="data-value" id="avgTemp">--</span> °C
-        </p>
-        <p class="data">
-          <span>Min:</span>
-          <span class="data-value" id="minTemp">--</span> °C
-        </p>
-        <p class="data">
-          <span>Max:</span>
-          <span class="data-value" id="maxTemp">--</span> °C
-        </p>
+      <div class="flex items-center space-x-4">
+        <div class="text-right hidden md:block">
+          <p class="font-medium" id="current-date"></p>
+          <p class="text-sm opacity-80" id="current-time"></p>
+        </div>
+        <div class="bg-white bg-opacity-20 p-2 rounded-full">
+          <i class="fas fa-user text-xl"></i>
+        </div>
       </div>
-      <div class="card">
-        <h3>💧 Humidité Moyenne <span class="status" id="avgHumidityStatus"></span></h3>
-        <p class="data">
-          <span>Valeur:</span>
-          <span class="data-value" id="avgHumidity">--</span> %
-        </p>
-        <p class="data">
-          <span>Min:</span>
-          <span class="data-value" id="minHumidity">--</span> %
-        </p>
-        <p class="data">
-          <span>Max:</span>
-          <span class="data-value" id="maxHumidity">--</span> %
-        </p>
-      </div>
-      <div class="card">
-        <h3>⚠️ Alertes Actives</h3>
-        <p class="data">
-          <span>Nombre:</span>
-          <span class="data-value" id="alertCount">0</span>
-        </p>
-        <div id="alertsContainer"></div>
-      </div>
-    </section>
-
-    <div class="section-title">🛰️ État des Capteurs en Temps Réel</div>
-    <section class="sensors">
-      <div class="card" id="siloCard">
-        <h3>🌾 Silo A <span class="status" id="siloStatus"></span></h3>
-        <p class="data">
-          <span>Stock:</span>
-          <span class="data-value" id="siloStock">--</span> %
-        </p>
-        <p class="data">
-          <span>Température:</span>
-          <span class="data-value" id="siloTemp">--</span> °C
-        </p>
-        <p class="data">
-          <span>Dernière mise à jour:</span>
-          <span class="data-value" id="siloTime">--</span>
-        </p>
-        <div id="siloAlert"></div>
-      </div>
-
-      <div class="card" id="fridgeCard">
-        <h3>🧊 Frigo B <span class="status" id="fridgeStatus"></span></h3>
-        <p class="data">
-          <span>Température:</span>
-          <span class="data-value" id="fridgeTemp">--</span> °C
-        </p>
-        <p class="data">
-          <span>Humidité:</span>
-          <span class="data-value" id="fridgeHumidity">--</span> %
-        </p>
-        <p class="data">
-          <span>Dernière mise à jour:</span>
-          <span class="data-value" id="fridgeTime">--</span>
-        </p>
-        <div id="fridgeAlert"></div>
-      </div>
-
-      <div class="card" id="shelfCard">
-        <h3>🛒 Rayon C <span class="status" id="shelfStatus"></span></h3>
-        <p class="data">
-          <span>Stock:</span>
-          <span class="data-value" id="shelfStock">--</span> %
-        </p>
-        <p class="data">
-          <span>Éclairage:</span>
-          <span class="data-value" id="shelfLight">--</span> lux
-        </p>
-        <p class="data">
-          <span>Dernière mise à jour:</span>
-          <span class="data-value" id="shelfTime">--</span>
-        </p>
-        <div id="shelfAlert"></div>
-      </div>
-
-      <div class="card" id="freezerCard">
-        <h3>❄️ Congélateur D <span class="status" id="freezerStatus"></span></h3>
-        <p class="data">
-          <span>Température:</span>
-          <span class="data-value" id="freezerTemp">--</span> °C
-        </p>
-        <p class="data">
-          <span>Humidité:</span>
-          <span class="data-value" id="freezerHumidity">--</span> %
-        </p>
-        <p class="data">
-          <span>Dernière mise à jour:</span>
-          <span class="data-value" id="freezerTime">--</span>
-        </p>
-        <div id="freezerAlert"></div>
-      </div>
-    </section>
-
-    <div class="section-title">📈 Historique des Données</div>
-    <div class="chart-container">
-      <canvas id="stockChart"></canvas>
     </div>
-    <div class="chart-container">
-      <canvas id="tempChart"></canvas>
-    </div>
+  </header>
 
-    <div class="section-title">🛠️ Solutions Recommandées</div>
-    <div class="solutions" id="solutionsContainer">
-      <!-- Solutions will be dynamically inserted here -->
+  <!-- Main Content -->
+  <div class="container mx-auto px-4 py-6">
+    <!-- Stats Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
+      <div class="bg-white rounded-xl shadow p-5 flex items-center">
+        <div class="bg-blue-100 text-blue-600 p-3 rounded-lg mr-4">
+          <i class="fas fa-warehouse text-2xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-500 text-sm">Stock Moyen</p>
+          <div class="flex items-center">
+            <h3 class="text-2xl font-bold" id="avgStock">--</h3>
+            <span class="ml-1">%</span>
+            <span class="status-dot ml-auto" id="avgStockStatus"></span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white rounded-xl shadow p-5 flex items-center">
+        <div class="bg-amber-100 text-amber-600 p-3 rounded-lg mr-4">
+          <i class="fas fa-thermometer-half text-2xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-500 text-sm">Température Moyenne</p>
+          <div class="flex items-center">
+            <h3 class="text-2xl font-bold" id="avgTemp">--</h3>
+            <span class="ml-1">°C</span>
+            <span class="status-dot ml-auto" id="avgTempStatus"></span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white rounded-xl shadow p-5 flex items-center">
+        <div class="bg-teal-100 text-teal-600 p-3 rounded-lg mr-4">
+          <i class="fas fa-tint text-2xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-500 text-sm">Humidité Moyenne</p>
+          <div class="flex items-center">
+            <h3 class="text-2xl font-bold" id="avgHumidity">--</h3>
+            <span class="ml-1">%</span>
+            <span class="status-dot ml-auto" id="avgHumidityStatus"></span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white rounded-xl shadow p-5 flex items-center">
+        <div class="bg-red-100 text-red-600 p-3 rounded-lg mr-4">
+          <i class="fas fa-exclamation-triangle text-2xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-500 text-sm">Alertes Actives</p>
+          <div class="flex items-center">
+            <h3 class="text-2xl font-bold" id="alertCount">0</h3>
+            <span class="status-dot bg-red-500 ml-auto"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left Column -->
+      <div class="lg:col-span-2">
+        <!-- Charts Section -->
+        <div class="mb-6">
+          <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-chart-line text-primary mr-2"></i> Historique des Données
+          </h2>
+          
+          <div class="bg-white rounded-xl shadow p-4 mb-5">
+            <div class="chart-container">
+              <canvas id="stockChart"></canvas>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-xl shadow p-4">
+            <div class="chart-container">
+              <canvas id="tempChart"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Solutions Section -->
+        <div class="mb-6">
+          <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-lightbulb text-yellow-500 mr-2"></i> Solutions Recommandées
+          </h2>
+          
+          <div id="solutionsContainer">
+            <!-- Solutions will be dynamically inserted here -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Column -->
+      <div>
+        <!-- Active Alerts -->
+        <div class="mb-6">
+          <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-bell text-red-500 mr-2"></i> Alertes Actives
+          </h2>
+          
+          <div class="bg-white rounded-xl shadow p-4" id="alertsContainer">
+            <!-- Alerts will be dynamically inserted here -->
+          </div>
+        </div>
+        
+        <!-- Real-time Sensors -->
+        <div>
+          <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-satellite text-primary mr-2"></i> État des Capteurs
+          </h2>
+          
+          <div class="dashboard-grid">
+            <!-- Silo Card -->
+            <div class="bg-white rounded-xl shadow p-5 relative card-hover">
+              <div class="absolute top-3 right-3">
+                <span class="status-dot" id="siloStatus"></span>
+              </div>
+              <div class="flex items-center mb-4">
+                <div class="bg-blue-100 text-blue-600 p-2 rounded-lg mr-3">
+                  <i class="fas fa-warehouse text-xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold">Silo A</h3>
+              </div>
+              
+              <div class="space-y-3">
+                <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                  <span class="text-gray-500">Stock</span>
+                  <span class="font-medium" id="siloStock">--</span>
+                </div>
+                <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                  <span class="text-gray-500">Température</span>
+                  <span class="font-medium" id="siloTemp">--</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-500">Dernière mise à jour</span>
+                  <span class="font-medium text-sm" id="siloTime">--</span>
+                </div>
+              </div>
+              
+              <div class="mt-4 text-sm p-2 rounded-lg" id="siloAlert"></div>
+            </div>
+            
+            <!-- Fridge Card -->
+            <div class="bg-white rounded-xl shadow p-5 relative card-hover">
+              <div class="absolute top-3 right-3">
+                <span class="status-dot" id="fridgeStatus"></span>
+              </div>
+              <div class="flex items-center mb-4">
+                <div class="bg-teal-100 text-teal-600 p-2 rounded-lg mr-3">
+                  <i class="fas fa-snowflake text-xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold">Frigo B</h3>
+              </div>
+              
+              <div class="space-y-3">
+                <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                  <span class="text-gray-500">Température</span>
+                  <span class="font-medium" id="fridgeTemp">--</span>
+                </div>
+                <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                  <span class="text-gray-500">Humidité</span>
+                  <span class="font-medium" id="fridgeHumidity">--</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-500">Dernière mise à jour</span>
+                  <span class="font-medium text-sm" id="fridgeTime">--</span>
+                </div>
+              </div>
+              
+              <div class="mt-4 text-sm p-2 rounded-lg" id="fridgeAlert"></div>
+            </div>
+            
+            <!-- Shelf Card -->
+            <div class="bg-white rounded-xl shadow p-5 relative card-hover">
+              <div class="absolute top-3 right-3">
+                <span class="status-dot" id="shelfStatus"></span>
+              </div>
+              <div class="flex items-center mb-4">
+                <div class="bg-amber-100 text-amber-600 p-2 rounded-lg mr-3">
+                  <i class="fas fa-shopping-cart text-xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold">Rayon C</h3>
+              </div>
+              
+              <div class="space-y-3">
+                <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                  <span class="text-gray-500">Stock</span>
+                  <span class="font-medium" id="shelfStock">--</span>
+                </div>
+                <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                  <span class="text-gray-500">Éclairage</span>
+                  <span class="font-medium" id="shelfLight">--</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-500">Dernière mise à jour</span>
+                  <span class="font-medium text-sm" id="shelfTime">--</span>
+                </div>
+              </div>
+              
+              <div class="mt-4 text-sm p-2 rounded-lg" id="shelfAlert"></div>
+            </div>
+            
+            <!-- Freezer Card -->
+            <div class="bg-white rounded-xl shadow p-5 relative card-hover">
+              <div class="absolute top-3 right-3">
+                <span class="status-dot" id="freezerStatus"></span>
+              </div>
+              <div class="flex items-center mb-4">
+                <div class="bg-indigo-100 text-indigo-600 p-2 rounded-lg mr-3">
+                  <i class="fas fa-icicles text-xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold">Congélateur D</h3>
+              </div>
+              
+              <div class="space-y-3">
+                <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                  <span class="text-gray-500">Température</span>
+                  <span class="font-medium" id="freezerTemp">--</span>
+                </div>
+                <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                  <span class="text-gray-500">Humidité</span>
+                  <span class="font-medium" id="freezerHumidity">--</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-500">Dernière mise à jour</span>
+                  <span class="font-medium text-sm" id="freezerTime">--</span>
+                </div>
+              </div>
+              
+              <div class="mt-4 text-sm p-2 rounded-lg" id="freezerAlert"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <footer>SmartStock Pro v2.0 - © 2025 - Système de surveillance intelligent des stocks</footer>
+  <!-- Footer -->
+  <footer class="bg-gray-100 border-t py-4 mt-8">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="text-gray-600 text-sm">
+          SmartStock Pro v2.0 - © 2025 - Système de surveillance intelligent des stocks
+        </div>
+        <div class="flex space-x-4 mt-2 md:mt-0">
+          <a href="#" class="text-gray-500 hover:text-primary">
+            <i class="fab fa-facebook"></i>
+          </a>
+          <a href="#" class="text-gray-500 hover:text-primary">
+            <i class="fab fa-twitter"></i>
+          </a>
+          <a href="#" class="text-gray-500 hover:text-primary">
+            <i class="fab fa-linkedin"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
 
   <script>
     // Data history for charts
@@ -405,11 +400,15 @@
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: {
           title: {
             display: true,
             text: 'Historique des Niveaux de Stock'
           },
+          legend: {
+            position: 'top',
+          }
         },
         scales: {
           y: {
@@ -453,11 +452,15 @@
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: {
           title: {
             display: true,
             text: 'Historique des Températures'
           },
+          legend: {
+            position: 'top',
+          }
         }
       }
     });
@@ -470,6 +473,20 @@
     function getCurrentTime() {
       const now = new Date();
       return now.toLocaleTimeString();
+    }
+    
+    function updateDateTime() {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('fr-FR', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      const timeStr = now.toLocaleTimeString('fr-FR');
+      
+      document.getElementById('current-date').textContent = dateStr;
+      document.getElementById('current-time').textContent = timeStr;
     }
 
     function simulateSensorData() {
@@ -499,11 +516,15 @@
       history.siloStock.push(siloStock);
       history.siloTemp.push(siloTemp);
       
-      document.getElementById("siloStock").innerText = siloStock;
-      document.getElementById("siloTemp").innerText = siloTemp;
+      document.getElementById("siloStock").innerText = siloStock + "%";
+      document.getElementById("siloTemp").innerText = siloTemp + "°C";
       document.getElementById("siloTime").innerText = getCurrentTime();
       
-      let siloStatus = "status-normal";
+      let siloStatus = "bg-green-500";
+      let siloAlertClass = "bg-green-100 text-green-700";
+      let siloAlertIcon = "fas fa-check-circle";
+      let siloAlertMsg = "✅ Tout est normal";
+      
       if (siloStock < 20) {
         alerts.push({
           type: "alert",
@@ -518,15 +539,23 @@
             "Optimiser l'allocation des stocks existants"
           ]
         });
-        siloStatus = "status-alert";
+        siloStatus = "bg-red-500";
+        siloAlertClass = "bg-red-100 text-red-700";
+        siloAlertIcon = "fas fa-exclamation-circle";
+        siloAlertMsg = "🚨 Stock critique - Action requise";
       } else if (siloStock < 35) {
         alerts.push({
           type: "warning",
           message: "⚠️ Stock faible dans le silo A (" + siloStock + "%) - Pensez à réapprovisionner"
         });
-        siloStatus = "status-warning";
+        siloStatus = "bg-yellow-500";
+        siloAlertClass = "bg-yellow-100 text-yellow-700";
+        siloAlertIcon = "fas fa-exclamation-triangle";
+        siloAlertMsg = "⚠️ Stock faible - Surveiller";
       }
-      document.getElementById("siloStatus").className = "status " + siloStatus;
+      document.getElementById("siloStatus").className = "status-dot " + siloStatus;
+      document.getElementById("siloAlert").innerHTML = `<i class="${siloAlertIcon} mr-2"></i> ${siloAlertMsg}`;
+      document.getElementById("siloAlert").className = `text-sm p-2 rounded-lg ${siloAlertClass}`;
 
       // Capteur 2 : Frigo
       const fridgeTemp = (Math.random() * 10).toFixed(1);
@@ -534,11 +563,15 @@
       history.fridgeTemp.push(fridgeTemp);
       history.fridgeHumidity.push(fridgeHumidity);
       
-      document.getElementById("fridgeTemp").innerText = fridgeTemp;
-      document.getElementById("fridgeHumidity").innerText = fridgeHumidity;
+      document.getElementById("fridgeTemp").innerText = fridgeTemp + "°C";
+      document.getElementById("fridgeHumidity").innerText = fridgeHumidity + "%";
       document.getElementById("fridgeTime").innerText = getCurrentTime();
       
-      let fridgeStatus = "status-normal";
+      let fridgeStatus = "bg-green-500";
+      let fridgeAlertClass = "bg-green-100 text-green-700";
+      let fridgeAlertIcon = "fas fa-check-circle";
+      let fridgeAlertMsg = "✅ Tout est normal";
+      
       if (fridgeTemp > 6) {
         alerts.push({
           type: "alert",
@@ -554,15 +587,23 @@
             "Contacter un technicien si le problème persiste"
           ]
         });
-        fridgeStatus = "status-alert";
+        fridgeStatus = "bg-red-500";
+        fridgeAlertClass = "bg-red-100 text-red-700";
+        fridgeAlertIcon = "fas fa-exclamation-circle";
+        fridgeAlertMsg = "🚨 Température dangereuse - Action requise";
       } else if (fridgeTemp > 4) {
         alerts.push({
           type: "warning",
           message: "⚠️ Température élevée dans le frigo B (" + fridgeTemp + "°C) - Surveillance requise"
         });
-        fridgeStatus = "status-warning";
+        fridgeStatus = "bg-yellow-500";
+        fridgeAlertClass = "bg-yellow-100 text-yellow-700";
+        fridgeAlertIcon = "fas fa-exclamation-triangle";
+        fridgeAlertMsg = "⚠️ Température élevée - Surveiller";
       }
-      document.getElementById("fridgeStatus").className = "status " + fridgeStatus;
+      document.getElementById("fridgeStatus").className = "status-dot " + fridgeStatus;
+      document.getElementById("fridgeAlert").innerHTML = `<i class="${fridgeAlertIcon} mr-2"></i> ${fridgeAlertMsg}`;
+      document.getElementById("fridgeAlert").className = `text-sm p-2 rounded-lg ${fridgeAlertClass}`;
 
       // Capteur 3 : Rayon
       const shelfStock = Math.floor(Math.random() * 100);
@@ -570,11 +611,15 @@
       history.shelfStock.push(shelfStock);
       history.shelfLight.push(shelfLight);
       
-      document.getElementById("shelfStock").innerText = shelfStock;
-      document.getElementById("shelfLight").innerText = shelfLight;
+      document.getElementById("shelfStock").innerText = shelfStock + "%";
+      document.getElementById("shelfLight").innerText = shelfLight + " lux";
       document.getElementById("shelfTime").innerText = getCurrentTime();
       
-      let shelfStatus = "status-normal";
+      let shelfStatus = "bg-green-500";
+      let shelfAlertClass = "bg-green-100 text-green-700";
+      let shelfAlertIcon = "fas fa-check-circle";
+      let shelfAlertMsg = "✅ Tout est normal";
+      
       if (shelfStock < 30) {
         alerts.push({
           type: "alert",
@@ -589,15 +634,23 @@
             "Analyser les tendances de vente pour ajuster les quantités"
           ]
         });
-        shelfStatus = "status-alert";
+        shelfStatus = "bg-red-500";
+        shelfAlertClass = "bg-red-100 text-red-700";
+        shelfAlertIcon = "fas fa-exclamation-circle";
+        shelfAlertMsg = "🚨 Stock faible - Réappro urgent";
       } else if (shelfStock < 50) {
         alerts.push({
           type: "warning",
           message: "⚠️ Stock moyen sur le rayon C (" + shelfStock + "%) - Prévoir réapprovisionnement"
         });
-        shelfStatus = "status-warning";
+        shelfStatus = "bg-yellow-500";
+        shelfAlertClass = "bg-yellow-100 text-yellow-700";
+        shelfAlertIcon = "fas fa-exclamation-triangle";
+        shelfAlertMsg = "⚠️ Stock moyen - Prévoir réappro";
       }
-      document.getElementById("shelfStatus").className = "status " + shelfStatus;
+      document.getElementById("shelfStatus").className = "status-dot " + shelfStatus;
+      document.getElementById("shelfAlert").innerHTML = `<i class="${shelfAlertIcon} mr-2"></i> ${shelfAlertMsg}`;
+      document.getElementById("shelfAlert").className = `text-sm p-2 rounded-lg ${shelfAlertClass}`;
 
       // Capteur 4 : Congélateur
       const freezerTemp = (-25 + Math.random() * 10).toFixed(1);
@@ -605,11 +658,15 @@
       history.freezerTemp.push(freezerTemp);
       history.freezerHumidity.push(freezerHumidity);
       
-      document.getElementById("freezerTemp").innerText = freezerTemp;
-      document.getElementById("freezerHumidity").innerText = freezerHumidity;
+      document.getElementById("freezerTemp").innerText = freezerTemp + "°C";
+      document.getElementById("freezerHumidity").innerText = freezerHumidity + "%";
       document.getElementById("freezerTime").innerText = getCurrentTime();
       
-      let freezerStatus = "status-normal";
+      let freezerStatus = "bg-green-500";
+      let freezerAlertClass = "bg-green-100 text-green-700";
+      let freezerAlertIcon = "fas fa-check-circle";
+      let freezerAlertMsg = "✅ Tout est normal";
+      
       if (freezerTemp > -15) {
         alerts.push({
           type: "alert",
@@ -625,15 +682,23 @@
             "Contacter un technicien si nécessaire"
           ]
         });
-        freezerStatus = "status-alert";
+        freezerStatus = "bg-red-500";
+        freezerAlertClass = "bg-red-100 text-red-700";
+        freezerAlertIcon = "fas fa-exclamation-circle";
+        freezerAlertMsg = "🚨 Température dangereuse - Action requise";
       } else if (freezerTemp > -18) {
         alerts.push({
           type: "warning",
           message: "⚠️ Température élevée dans le congélateur D (" + freezerTemp + "°C) - Surveillance requise"
         });
-        freezerStatus = "status-warning";
+        freezerStatus = "bg-yellow-500";
+        freezerAlertClass = "bg-yellow-100 text-yellow-700";
+        freezerAlertIcon = "fas fa-exclamation-triangle";
+        freezerAlertMsg = "⚠️ Température élevée - Surveiller";
       }
-      document.getElementById("freezerStatus").className = "status " + freezerStatus;
+      document.getElementById("freezerStatus").className = "status-dot " + freezerStatus;
+      document.getElementById("freezerAlert").innerHTML = `<i class="${freezerAlertIcon} mr-2"></i> ${freezerAlertMsg}`;
+      document.getElementById("freezerAlert").className = `text-sm p-2 rounded-lg ${freezerAlertClass}`;
 
       // Update dashboard metrics
       const stocks = [siloStock, shelfStock];
@@ -649,92 +714,86 @@
       const maxStock = max(stocks);
       
       document.getElementById("avgStock").innerText = avgStock;
-      document.getElementById("minStock").innerText = minStock;
-      document.getElementById("maxStock").innerText = maxStock;
       
       // Set stock status
-      document.getElementById("avgStockStatus").className = "status " + 
-        (minStock < 20 ? "status-alert" : minStock < 35 ? "status-warning" : "status-normal");
+      const stockStatus = minStock < 20 ? "bg-red-500" : minStock < 35 ? "bg-yellow-500" : "bg-green-500";
+      document.getElementById("avgStockStatus").className = "status-dot " + stockStatus;
 
       const avgTemp = avg(temps).toFixed(1);
       const minTemp = min(temps).toFixed(1);
       const maxTemp = max(temps).toFixed(1);
       
       document.getElementById("avgTemp").innerText = avgTemp;
-      document.getElementById("minTemp").innerText = minTemp;
-      document.getElementById("maxTemp").innerText = maxTemp;
       
       // Set temp status
-      document.getElementById("avgTempStatus").className = "status " + 
-        (maxTemp > 6 || min(temps) > -15 ? "status-alert" : 
-         (maxTemp > 4 || min(temps) > -18) ? "status-warning" : "status-normal");
+      const tempStatus = maxTemp > 6 || min(temps) > -15 ? "bg-red-500" : 
+                         (maxTemp > 4 || min(temps) > -18) ? "bg-yellow-500" : "bg-green-500";
+      document.getElementById("avgTempStatus").className = "status-dot " + tempStatus;
 
       const avgHumidity = avg(humidities).toFixed(1);
       const minHumidity = min(humidities);
       const maxHumidity = max(humidities);
       
       document.getElementById("avgHumidity").innerText = avgHumidity;
-      document.getElementById("minHumidity").innerText = minHumidity;
-      document.getElementById("maxHumidity").innerText = maxHumidity;
       
       // Set humidity status
-      document.getElementById("avgHumidityStatus").className = "status " + 
-        (maxHumidity > 85 ? "status-warning" : "status-normal");
+      const humidityStatus = maxHumidity > 85 ? "bg-yellow-500" : "bg-green-500";
+      document.getElementById("avgHumidityStatus").className = "status-dot " + humidityStatus;
 
       document.getElementById("alertCount").innerText = alerts.length;
 
       // Update alerts display
       const alertsContainer = document.getElementById("alertsContainer");
-      alertsContainer.innerHTML = alerts.length === 0 ? 
-        '<p class="success">✅ Aucune alerte active</p>' : 
-        alerts.map(alert => `<p class="${alert.type}">${alert.message}</p>`).join('');
-
-      // Update sensor alerts
-      document.getElementById("siloAlert").innerHTML = siloStatus === "status-normal" ? 
-        '<p class="success">✅ Tout est normal</p>' : 
-        siloStatus === "status-warning" ? 
-        '<p class="warning">⚠️ Stock faible - Surveiller</p>' : 
-        '<p class="alert">🚨 Stock critique - Action requise</p>';
-
-      document.getElementById("fridgeAlert").innerHTML = fridgeStatus === "status-normal" ? 
-        '<p class="success">✅ Tout est normal</p>' : 
-        fridgeStatus === "status-warning" ? 
-        '<p class="warning">⚠️ Température élevée - Surveiller</p>' : 
-        '<p class="alert">🚨 Température dangereuse - Action requise</p>';
-
-      document.getElementById("shelfAlert").innerHTML = shelfStatus === "status-normal" ? 
-        '<p class="success">✅ Tout est normal</p>' : 
-        shelfStatus === "status-warning" ? 
-        '<p class="warning">⚠️ Stock moyen - Prévoir réappro</p>' : 
-        '<p class="alert">🚨 Stock faible - Réappro urgent</p>';
-
-      document.getElementById("freezerAlert").innerHTML = freezerStatus === "status-normal" ? 
-        '<p class="success">✅ Tout est normal</p>' : 
-        freezerStatus === "status-warning" ? 
-        '<p class="warning">⚠️ Température élevée - Surveiller</p>' : 
-        '<p class="alert">🚨 Température dangereuse - Action requise</p>';
+      if (alerts.length === 0) {
+        alertsContainer.innerHTML = `
+          <div class="bg-green-50 text-green-700 p-4 rounded-lg flex items-center">
+            <i class="fas fa-check-circle text-xl mr-3"></i>
+            <p class="font-medium">✅ Aucune alerte active - Tous les systèmes fonctionnent normalement</p>
+          </div>
+        `;
+      } else {
+        alertsContainer.innerHTML = alerts.map(alert => `
+          <div class="${alert.type === 'alert' ? 'bg-red-50 text-red-700' : 'bg-yellow-50 text-yellow-700'} p-4 rounded-lg mb-3 flex items-start">
+            <i class="fas ${alert.type === 'alert' ? 'fa-exclamation-circle' : 'fa-exclamation-triangle'} text-xl mr-3 mt-1"></i>
+            <p class="font-medium">${alert.message}</p>
+          </div>
+        `).join('');
+      }
 
       // Update solutions
       const solutionsContainer = document.getElementById("solutionsContainer");
       if (solutions.length === 0) {
         solutionsContainer.innerHTML = `
-          <div class="solution-card">
-            <h3>✅ Aucun problème critique détecté</h3>
-            <p>Tous les paramètres sont dans les plages normales. Continuez à surveiller le tableau de bord pour des mises à jour en temps réel.</p>
+          <div class="bg-white rounded-xl shadow p-5">
+            <div class="flex items-center text-green-600 mb-3">
+              <i class="fas fa-check-circle text-2xl mr-2"></i>
+              <h3 class="text-xl font-bold">Aucun problème critique détecté</h3>
+            </div>
+            <p class="text-gray-600">Tous les paramètres sont dans les plages normales. Continuez à surveiller le tableau de bord pour des mises à jour en temps réel.</p>
           </div>
         `;
       } else {
         solutionsContainer.innerHTML = solutions.map(solution => `
-          <div class="solution-card">
-            <h3>🛠️ ${solution.problem}</h3>
-            <p>${solution.description}</p>
-            <h4>Actions recommandées:</h4>
-            <ul>
-              ${solution.actions.map(action => `<li>${action}</li>`).join('')}
+          <div class="bg-white rounded-xl shadow p-5 mb-4">
+            <div class="flex items-center text-red-600 mb-3">
+              <i class="fas fa-exclamation-triangle text-2xl mr-2"></i>
+              <h3 class="text-xl font-bold">${solution.problem}</h3>
+            </div>
+            <p class="text-gray-600 mb-4">${solution.description}</p>
+            <h4 class="font-semibold text-gray-700 mb-2">Actions recommandées:</h4>
+            <ul class="mb-4 space-y-2">
+              ${solution.actions.map(action => `<li class="flex items-start">
+                <i class="fas fa-chevron-right text-primary mr-2 mt-1 text-xs"></i>
+                <span>${action}</span>
+              </li>`).join('')}
             </ul>
-            <div class="actions">
-              <button class="btn btn-primary">Marquer comme urgent</button>
-              <button class="btn btn-secondary">Planifier pour plus tard</button>
+            <div class="flex gap-3">
+              <button class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors">
+                <i class="fas fa-bolt mr-2"></i>Marquer comme urgent
+              </button>
+              <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors">
+                <i class="far fa-clock mr-2"></i>Planifier pour plus tard
+              </button>
             </div>
           </div>
         `).join('');
@@ -745,10 +804,12 @@
     }
 
     // Initial data load
+    updateDateTime();
     simulateSensorData();
     
     // Update every 5 seconds
     setInterval(simulateSensorData, 5000);
+    setInterval(updateDateTime, 1000);
   </script>
 </body>
 </html>

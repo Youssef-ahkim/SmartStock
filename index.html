@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartStock - Suivi des Stocks Intelligent</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary: #1e88e5;
+      --primary-dark: #1565c0;
+      --secondary: #f4f6f8;
+      --alert: #d32f2f;
+      --warning: #ffa000;
+      --success: #43a047;
+      --info: #0288d1;
+      --card-bg: #ffffff;
+      --font: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--secondary);
+      color: #333;
+      line-height: 1.6;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 15px;
+    }
+
+    .dashboard, .sensors {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      padding: 20px 0;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 20px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card h3 .status {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-left: auto;
+    }
+
+    .status-normal {
+      background: var(--success);
+    }
+
+    .status-warning {
+      background: var(--warning);
+    }
+
+    .status-alert {
+      background: var(--alert);
+    }
+
+    .data {
+      font-size: 15px;
+      margin: 10px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .data-value {
+      font-weight: 600;
+    }
+
+    .alert {
+      color: var(--alert);
+      font-weight: bold;
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: rgba(211, 47, 47, 0.1);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .warning {
+      color: var(--warning);
+      background: rgba(255, 160, 0, 0.1);
+    }
+
+    .success {
+      color: var(--success);
+      background: rgba(67, 160, 71, 0.1);
+    }
+
+    .section-title {
+      padding: 15px 0 5px;
+      font-size: 18px;
+      font-weight: 600;
+      margin-top: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary-dark);
+    }
+
+    .chart-container {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 20px;
+      margin: 20px 0 30px;
+    }
+
+    .solutions {
+      margin: 30px 0;
+    }
+
+    .solution-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .solution-card h3 {
+      margin-top: 0;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .solution-card .actions {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(30, 136, 229, 0.1);
+    }
+
+    footer {
+      text-align: center;
+      font-size: 13px;
+      color: #777;
+      padding: 20px;
+      margin-top: 30px;
+      border-top: 1px solid #eee;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard, .sensors {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>📦 SmartStock - Plateforme de Suivi Intelligent des Stocks</header>
+
+  <div class="container">
+    <div class="section-title">📊 Tableau de Bord Global</div>
+    <section class="dashboard">
+      <div class="card">
+        <h3>📦 Stock Moyen <span class="status" id="avgStockStatus"></span></h3>
+        <p class="data">
+          <span>Valeur:</span>
+          <span class="data-value" id="avgStock">--</span> %
+        </p>
+        <p class="data">
+          <span>Min:</span>
+          <span class="data-value" id="minStock">--</span> %
+        </p>
+        <p class="data">
+          <span>Max:</span>
+          <span class="data-value" id="maxStock">--</span> %
+        </p>
+      </div>
+      <div class="card">
+        <h3>🌡️ Température Moyenne <span class="status" id="avgTempStatus"></span></h3>
+        <p class="data">
+          <span>Valeur:</span>
+          <span class="data-value" id="avgTemp">--</span> °C
+        </p>
+        <p class="data">
+          <span>Min:</span>
+          <span class="data-value" id="minTemp">--</span> °C
+        </p>
+        <p class="data">
+          <span>Max:</span>
+          <span class="data-value" id="maxTemp">--</span> °C
+        </p>
+      </div>
+      <div class="card">
+        <h3>💧 Humidité Moyenne <span class="status" id="avgHumidityStatus"></span></h3>
+        <p class="data">
+          <span>Valeur:</span>
+          <span class="data-value" id="avgHumidity">--</span> %
+        </p>
+        <p class="data">
+          <span>Min:</span>
+          <span class="data-value" id="minHumidity">--</span> %
+        </p>
+        <p class="data">
+          <span>Max:</span>
+          <span class="data-value" id="maxHumidity">--</span> %
+        </p>
+      </div>
+      <div class="card">
+        <h3>⚠️ Alertes Actives</h3>
+        <p class="data">
+          <span>Nombre:</span>
+          <span class="data-value" id="alertCount">0</span>
+        </p>
+        <div id="alertsContainer"></div>
+      </div>
+    </section>
+
+    <div class="section-title">🛰️ État des Capteurs en Temps Réel</div>
+    <section class="sensors">
+      <div class="card" id="siloCard">
+        <h3>🌾 Silo A <span class="status" id="siloStatus"></span></h3>
+        <p class="data">
+          <span>Stock:</span>
+          <span class="data-value" id="siloStock">--</span> %
+        </p>
+        <p class="data">
+          <span>Température:</span>
+          <span class="data-value" id="siloTemp">--</span> °C
+        </p>
+        <p class="data">
+          <span>Dernière mise à jour:</span>
+          <span class="data-value" id="siloTime">--</span>
+        </p>
+        <div id="siloAlert"></div>
+      </div>
+
+      <div class="card" id="fridgeCard">
+        <h3>🧊 Frigo B <span class="status" id="fridgeStatus"></span></h3>
+        <p class="data">
+          <span>Température:</span>
+          <span class="data-value" id="fridgeTemp">--</span> °C
+        </p>
+        <p class="data">
+          <span>Humidité:</span>
+          <span class="data-value" id="fridgeHumidity">--</span> %
+        </p>
+        <p class="data">
+          <span>Dernière mise à jour:</span>
+          <span class="data-value" id="fridgeTime">--</span>
+        </p>
+        <div id="fridgeAlert"></div>
+      </div>
+
+      <div class="card" id="shelfCard">
+        <h3>🛒 Rayon C <span class="status" id="shelfStatus"></span></h3>
+        <p class="data">
+          <span>Stock:</span>
+          <span class="data-value" id="shelfStock">--</span> %
+        </p>
+        <p class="data">
+          <span>Éclairage:</span>
+          <span class="data-value" id="shelfLight">--</span> lux
+        </p>
+        <p class="data">
+          <span>Dernière mise à jour:</span>
+          <span class="data-value" id="shelfTime">--</span>
+        </p>
+        <div id="shelfAlert"></div>
+      </div>
+
+      <div class="card" id="freezerCard">
+        <h3>❄️ Congélateur D <span class="status" id="freezerStatus"></span></h3>
+        <p class="data">
+          <span>Température:</span>
+          <span class="data-value" id="freezerTemp">--</span> °C
+        </p>
+        <p class="data">
+          <span>Humidité:</span>
+          <span class="data-value" id="freezerHumidity">--</span> %
+        </p>
+        <p class="data">
+          <span>Dernière mise à jour:</span>
+          <span class="data-value" id="freezerTime">--</span>
+        </p>
+        <div id="freezerAlert"></div>
+      </div>
+    </section>
+
+    <div class="section-title">📈 Historique des Données</div>
+    <div class="chart-container">
+      <canvas id="stockChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <canvas id="tempChart"></canvas>
+    </div>
+
+    <div class="section-title">🛠️ Solutions Recommandées</div>
+    <div class="solutions" id="solutionsContainer">
+      <!-- Solutions will be dynamically inserted here -->
+    </div>
+  </div>
+
+  <footer>SmartStock Pro v2.0 - © 2025 - Système de surveillance intelligent des stocks</footer>
+
+  <script>
+    // Data history for charts
+    const history = {
+      timestamps: [],
+      siloStock: [],
+      shelfStock: [],
+      siloTemp: [],
+      fridgeTemp: [],
+      freezerTemp: [],
+      fridgeHumidity: [],
+      freezerHumidity: [],
+      shelfLight: []
+    };
+
+    // Initialize charts
+    const stockCtx = document.getElementById('stockChart').getContext('2d');
+    const tempCtx = document.getElementById('tempChart').getContext('2d');
+
+    const stockChart = new Chart(stockCtx, {
+      type: 'line',
+      data: {
+        labels: history.timestamps,
+        datasets: [
+          {
+            label: 'Stock Silo A (%)',
+            data: history.siloStock,
+            borderColor: '#1e88e5',
+            backgroundColor: 'rgba(30, 136, 229, 0.1)',
+            tension: 0.3,
+            fill: true
+          },
+          {
+            label: 'Stock Rayon C (%)',
+            data: history.shelfStock,
+            borderColor: '#43a047',
+            backgroundColor: 'rgba(67, 160, 71, 0.1)',
+            tension: 0.3,
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Historique des Niveaux de Stock'
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100
+          }
+        }
+      }
+    });
+
+    const tempChart = new Chart(tempCtx, {
+      type: 'line',
+      data: {
+        labels: history.timestamps,
+        datasets: [
+          {
+            label: 'Température Silo (°C)',
+            data: history.siloTemp,
+            borderColor: '#ffa000',
+            backgroundColor: 'rgba(255, 160, 0, 0.1)',
+            tension: 0.3,
+            fill: true
+          },
+          {
+            label: 'Température Frigo (°C)',
+            data: history.fridgeTemp,
+            borderColor: '#0288d1',
+            backgroundColor: 'rgba(2, 136, 209, 0.1)',
+            tension: 0.3,
+            fill: true
+          },
+          {
+            label: 'Température Congélateur (°C)',
+            data: history.freezerTemp,
+            borderColor: '#d32f2f',
+            backgroundColor: 'rgba(211, 47, 47, 0.1)',
+            tension: 0.3,
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Historique des Températures'
+          },
+        }
+      }
+    });
+
+    function updateCharts() {
+      stockChart.update();
+      tempChart.update();
+    }
+
+    function getCurrentTime() {
+      const now = new Date();
+      return now.toLocaleTimeString();
+    }
+
+    function simulateSensorData() {
+      const now = new Date();
+      const timestamp = now.toLocaleTimeString();
+      history.timestamps.push(timestamp);
+      
+      // Keep only last 12 data points
+      if (history.timestamps.length > 12) {
+        history.timestamps.shift();
+        history.siloStock.shift();
+        history.shelfStock.shift();
+        history.siloTemp.shift();
+        history.fridgeTemp.shift();
+        history.freezerTemp.shift();
+        history.fridgeHumidity.shift();
+        history.freezerHumidity.shift();
+        history.shelfLight.shift();
+      }
+
+      let alerts = [];
+      let solutions = [];
+
+      // Capteur 1 : Silo
+      const siloStock = Math.floor(Math.random() * 100);
+      const siloTemp = (20 + Math.random() * 10).toFixed(1);
+      history.siloStock.push(siloStock);
+      history.siloTemp.push(siloTemp);
+      
+      document.getElementById("siloStock").innerText = siloStock;
+      document.getElementById("siloTemp").innerText = siloTemp;
+      document.getElementById("siloTime").innerText = getCurrentTime();
+      
+      let siloStatus = "status-normal";
+      if (siloStock < 20) {
+        alerts.push({
+          type: "alert",
+          message: "⚠️ Stock critique dans le silo A (" + siloStock + "%) - Risque de rupture de stock"
+        });
+        solutions.push({
+          problem: "Stock faible dans le silo A",
+          description: "Le niveau de stock dans le silo A est critique (" + siloStock + "%). Cela peut entraîner une rupture de stock si aucune action n'est prise.",
+          actions: [
+            "Commander des matières premières supplémentaires",
+            "Vérifier les délais de livraison des fournisseurs",
+            "Optimiser l'allocation des stocks existants"
+          ]
+        });
+        siloStatus = "status-alert";
+      } else if (siloStock < 35) {
+        alerts.push({
+          type: "warning",
+          message: "⚠️ Stock faible dans le silo A (" + siloStock + "%) - Pensez à réapprovisionner"
+        });
+        siloStatus = "status-warning";
+      }
+      document.getElementById("siloStatus").className = "status " + siloStatus;
+
+      // Capteur 2 : Frigo
+      const fridgeTemp = (Math.random() * 10).toFixed(1);
+      const fridgeHumidity = Math.floor(Math.random() * 100);
+      history.fridgeTemp.push(fridgeTemp);
+      history.fridgeHumidity.push(fridgeHumidity);
+      
+      document.getElementById("fridgeTemp").innerText = fridgeTemp;
+      document.getElementById("fridgeHumidity").innerText = fridgeHumidity;
+      document.getElementById("fridgeTime").innerText = getCurrentTime();
+      
+      let fridgeStatus = "status-normal";
+      if (fridgeTemp > 6) {
+        alerts.push({
+          type: "alert",
+          message: "🚨 Température trop élevée dans le frigo B (" + fridgeTemp + "°C) - Risque pour les produits périssables"
+        });
+        solutions.push({
+          problem: "Température élevée dans le frigo B",
+          description: "La température dans le frigo B (" + fridgeTemp + "°C) dépasse le seuil de sécurité. Cela peut compromettre la qualité des produits périssables.",
+          actions: [
+            "Vérifier le fonctionnement du système de réfrigération",
+            "Contrôler l'étanchéité des portes",
+            "Déplacer les produits sensibles si nécessaire",
+            "Contacter un technicien si le problème persiste"
+          ]
+        });
+        fridgeStatus = "status-alert";
+      } else if (fridgeTemp > 4) {
+        alerts.push({
+          type: "warning",
+          message: "⚠️ Température élevée dans le frigo B (" + fridgeTemp + "°C) - Surveillance requise"
+        });
+        fridgeStatus = "status-warning";
+      }
+      document.getElementById("fridgeStatus").className = "status " + fridgeStatus;
+
+      // Capteur 3 : Rayon
+      const shelfStock = Math.floor(Math.random() * 100);
+      const shelfLight = (300 + Math.random() * 500).toFixed(0);
+      history.shelfStock.push(shelfStock);
+      history.shelfLight.push(shelfLight);
+      
+      document.getElementById("shelfStock").innerText = shelfStock;
+      document.getElementById("shelfLight").innerText = shelfLight;
+      document.getElementById("shelfTime").innerText = getCurrentTime();
+      
+      let shelfStatus = "status-normal";
+      if (shelfStock < 30) {
+        alerts.push({
+          type: "alert",
+          message: "⚠️ Rayon C à recharger (" + shelfStock + "%) - Expérience client impactée"
+        });
+        solutions.push({
+          problem: "Stock faible sur le rayon C",
+          description: "Le niveau de stock sur le rayon C est bas (" + shelfStock + "%), ce qui peut affecter l'expérience client et les ventes.",
+          actions: [
+            "Planifier un réapprovisionnement immédiat",
+            "Vérifier les stocks en réserve",
+            "Analyser les tendances de vente pour ajuster les quantités"
+          ]
+        });
+        shelfStatus = "status-alert";
+      } else if (shelfStock < 50) {
+        alerts.push({
+          type: "warning",
+          message: "⚠️ Stock moyen sur le rayon C (" + shelfStock + "%) - Prévoir réapprovisionnement"
+        });
+        shelfStatus = "status-warning";
+      }
+      document.getElementById("shelfStatus").className = "status " + shelfStatus;
+
+      // Capteur 4 : Congélateur
+      const freezerTemp = (-25 + Math.random() * 10).toFixed(1);
+      const freezerHumidity = Math.floor(Math.random() * 100);
+      history.freezerTemp.push(freezerTemp);
+      history.freezerHumidity.push(freezerHumidity);
+      
+      document.getElementById("freezerTemp").innerText = freezerTemp;
+      document.getElementById("freezerHumidity").innerText = freezerHumidity;
+      document.getElementById("freezerTime").innerText = getCurrentTime();
+      
+      let freezerStatus = "status-normal";
+      if (freezerTemp > -15) {
+        alerts.push({
+          type: "alert",
+          message: "🚨 Congélateur D trop chaud (" + freezerTemp + "°C) - Danger pour les produits surgelés"
+        });
+        solutions.push({
+          problem: "Température élevée dans le congélateur D",
+          description: "La température dans le congélateur D (" + freezerTemp + "°C) est au-dessus du seuil recommandé, ce qui peut entraîner une décongélation partielle des produits.",
+          actions: [
+            "Vérifier l'accumulation de givre",
+            "Contrôler le joint de porte",
+            "Nettoyer les condenseurs",
+            "Contacter un technicien si nécessaire"
+          ]
+        });
+        freezerStatus = "status-alert";
+      } else if (freezerTemp > -18) {
+        alerts.push({
+          type: "warning",
+          message: "⚠️ Température élevée dans le congélateur D (" + freezerTemp + "°C) - Surveillance requise"
+        });
+        freezerStatus = "status-warning";
+      }
+      document.getElementById("freezerStatus").className = "status " + freezerStatus;
+
+      // Update dashboard metrics
+      const stocks = [siloStock, shelfStock];
+      const temps = [parseFloat(siloTemp), parseFloat(fridgeTemp), parseFloat(freezerTemp)];
+      const humidities = [fridgeHumidity, freezerHumidity];
+
+      const avg = arr => (arr.reduce((a, b) => a + b, 0) / arr.length);
+      const min = arr => Math.min(...arr);
+      const max = arr => Math.max(...arr);
+
+      const avgStock = avg(stocks).toFixed(1);
+      const minStock = min(stocks);
+      const maxStock = max(stocks);
+      
+      document.getElementById("avgStock").innerText = avgStock;
+      document.getElementById("minStock").innerText = minStock;
+      document.getElementById("maxStock").innerText = maxStock;
+      
+      // Set stock status
+      document.getElementById("avgStockStatus").className = "status " + 
+        (minStock < 20 ? "status-alert" : minStock < 35 ? "status-warning" : "status-normal");
+
+      const avgTemp = avg(temps).toFixed(1);
+      const minTemp = min(temps).toFixed(1);
+      const maxTemp = max(temps).toFixed(1);
+      
+      document.getElementById("avgTemp").innerText = avgTemp;
+      document.getElementById("minTemp").innerText = minTemp;
+      document.getElementById("maxTemp").innerText = maxTemp;
+      
+      // Set temp status
+      document.getElementById("avgTempStatus").className = "status " + 
+        (maxTemp > 6 || min(temps) > -15 ? "status-alert" : 
+         (maxTemp > 4 || min(temps) > -18) ? "status-warning" : "status-normal");
+
+      const avgHumidity = avg(humidities).toFixed(1);
+      const minHumidity = min(humidities);
+      const maxHumidity = max(humidities);
+      
+      document.getElementById("avgHumidity").innerText = avgHumidity;
+      document.getElementById("minHumidity").innerText = minHumidity;
+      document.getElementById("maxHumidity").innerText = maxHumidity;
+      
+      // Set humidity status
+      document.getElementById("avgHumidityStatus").className = "status " + 
+        (maxHumidity > 85 ? "status-warning" : "status-normal");
+
+      document.getElementById("alertCount").innerText = alerts.length;
+
+      // Update alerts display
+      const alertsContainer = document.getElementById("alertsContainer");
+      alertsContainer.innerHTML = alerts.length === 0 ? 
+        '<p class="success">✅ Aucune alerte active</p>' : 
+        alerts.map(alert => `<p class="${alert.type}">${alert.message}</p>`).join('');
+
+      // Update sensor alerts
+      document.getElementById("siloAlert").innerHTML = siloStatus === "status-normal" ? 
+        '<p class="success">✅ Tout est normal</p>' : 
+        siloStatus === "status-warning" ? 
+        '<p class="warning">⚠️ Stock faible - Surveiller</p>' : 
+        '<p class="alert">🚨 Stock critique - Action requise</p>';
+
+      document.getElementById("fridgeAlert").innerHTML = fridgeStatus === "status-normal" ? 
+        '<p class="success">✅ Tout est normal</p>' : 
+        fridgeStatus === "status-warning" ? 
+        '<p class="warning">⚠️ Température élevée - Surveiller</p>' : 
+        '<p class="alert">🚨 Température dangereuse - Action requise</p>';
+
+      document.getElementById("shelfAlert").innerHTML = shelfStatus === "status-normal" ? 
+        '<p class="success">✅ Tout est normal</p>' : 
+        shelfStatus === "status-warning" ? 
+        '<p class="warning">⚠️ Stock moyen - Prévoir réappro</p>' : 
+        '<p class="alert">🚨 Stock faible - Réappro urgent</p>';
+
+      document.getElementById("freezerAlert").innerHTML = freezerStatus === "status-normal" ? 
+        '<p class="success">✅ Tout est normal</p>' : 
+        freezerStatus === "status-warning" ? 
+        '<p class="warning">⚠️ Température élevée - Surveiller</p>' : 
+        '<p class="alert">🚨 Température dangereuse - Action requise</p>';
+
+      // Update solutions
+      const solutionsContainer = document.getElementById("solutionsContainer");
+      if (solutions.length === 0) {
+        solutionsContainer.innerHTML = `
+          <div class="solution-card">
+            <h3>✅ Aucun problème critique détecté</h3>
+            <p>Tous les paramètres sont dans les plages normales. Continuez à surveiller le tableau de bord pour des mises à jour en temps réel.</p>
+          </div>
+        `;
+      } else {
+        solutionsContainer.innerHTML = solutions.map(solution => `
+          <div class="solution-card">
+            <h3>🛠️ ${solution.problem}</h3>
+            <p>${solution.description}</p>
+            <h4>Actions recommandées:</h4>
+            <ul>
+              ${solution.actions.map(action => `<li>${action}</li>`).join('')}
+            </ul>
+            <div class="actions">
+              <button class="btn btn-primary">Marquer comme urgent</button>
+              <button class="btn btn-secondary">Planifier pour plus tard</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Update charts
+      updateCharts();
+    }
+
+    // Initial data load
+    simulateSensorData();
+    
+    // Update every 5 seconds
+    setInterval(simulateSensorData, 5000);
+  </script>
+</body>
+</html>
